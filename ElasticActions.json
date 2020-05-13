@@ -1,0 +1,58 @@
+//Return all items from an index - up to 1000
+POST indexName/_search
+{"size":1000,"query": {"match_all": {}}
+
+}
+
+//returns all item from an index that match the below term and filter and do not match the attribute
+POST indexName/_search
+{"size":1000,"query":{"bool" : {
+      "must": {
+        "term" : { "_type" : "_doc" }
+      },
+      "filter": {
+        "term" : { "_index": "dam_metadata__dev-dam-test" }
+      },
+  "must_not": [
+    {"term":{"file.isDeleted": true}}
+  ]
+}}
+}
+//Searches a specific item by attribute and a filter to exclude 
+POST indexName/_search
+{
+        "size":1000,
+        "query":
+            {"bool":
+                    {"must": { 
+                            "term" : { "_type" : "_doc" }},
+                            "filter": {"term" : { "file.ETag.keyword": "addc59ffd375dee083a6f05ccf907b0f-1" }
+                        },
+                        "must_not": [{"term":{"file.isDeleted": true}}] 
+                    }}
+    }
+	
+// batch update for one attribute
+POST indexName/_update_by_query
+{
+  "script": {
+    "source": "ctx._source.file.isDeleted=false",
+    "lang": "painless"
+  },
+  "query":{"bool": {
+      "should": [
+        { "match": { "_id": "c1841bcf-1c5d-465b-bbfd-df2fcff5f815" }},
+        { "match": { "_id": "e3d6762f-1837-446c-b528-e4dacc986fa3" }},
+        { "match": { "_id": "263be525-b8bf-4f45-b889-a50bd31c257f" }}
+      ]}}
+}
+
+//Delete all items
+POST /indexName/_delete_by_query?conflicts=proceed
+{
+  "query": {
+    "match_all": {}
+  }
+
+}
+
